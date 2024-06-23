@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: $background;
+  font-family: $font-family;
+  font-size: 24px;
+}
+
+.home {
+  @extend .vbox;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.content {
+  max-width: 600px; // Set a maximum width for .content
+}

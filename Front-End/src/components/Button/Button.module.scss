@@ -1,0 +1,30 @@
+.button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  text-transform: uppercase;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.text {
+  background-color: transparent;
+  color: #333;
+}
+
+.contained {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.outlined {
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+}
+
+.button:hover {
+  opacity: 0.8;
+}

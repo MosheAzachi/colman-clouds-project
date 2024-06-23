@@ -1,0 +1,13 @@
+.homeBox {
+  width: 50%;
+  h1 {
+    text-align: center;
+  }
+}
+
+.buttonBox {
+  display: flex;
+  justify-content: center; /* Center button horizontally */
+  align-items: center; /* Center button vertically */
+  margin-top: 20px; /* Example margin for spacing */
+}
