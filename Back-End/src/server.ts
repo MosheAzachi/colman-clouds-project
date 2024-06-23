@@ -47,5 +47,5 @@ app.get("/api/rds", (req: Request, res: Response) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server iss running on http://localhost:${PORT}`);
 });
