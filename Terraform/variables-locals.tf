@@ -6,6 +6,6 @@ locals {
     project = "colman"
   }
   ec2_key_name = "keypair"
-  app_ami = "ami-0bffdc0e07bcba99f"
+  app_ami = "ami-02cf6259bd668b49c"
   instance_type = "t2.micro"
 } 
