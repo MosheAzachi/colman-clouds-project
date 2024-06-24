@@ -32,26 +32,6 @@ connection.connect((err) => {
   console.log("Connected to MySQL database as id " + connection.threadId);
 });
 
-async function uploadFileToS3(bucketName: string, key: string, filePath: string): Promise<void> {
-  try {
-    const fileBody = fs.readFileSync(filePath);
-
-    const params = {
-      Bucket: bucketName,
-      Key: key,
-      Body: fileBody,
-    };
-
-    const command = new PutObjectCommand(params);
-    await s3Client.send(command);
-
-    console.log(`File uploaded successfully to S3 bucket: ${bucketName}`);
-  } catch (error) {
-    console.error("Error uploading file to S3:", error);
-    throw error;
-  }
-}
-
 // Routes
 app.get("/api/code", (req: Request, res: Response) => {
   const code = "Hi from the back!";
