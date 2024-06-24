@@ -5,9 +5,8 @@ export { CanceledError, AxiosError };
 const baseURL1 = window.location.hostname;
 
 const prefix = "http://";
-const suffix = ":3010";
 
-const baseURL = prefix + baseURL1 + suffix;
+const baseURL = prefix + baseURL1;
 
 const apiClient = axios.create({
   baseURL: baseURL,
