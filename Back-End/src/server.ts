@@ -1,13 +1,11 @@
 import "dotenv/config";
-import mysql from "mysql2";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { fromIni } from "@aws-sdk/credential-provider-ini";
-import fs from "fs";
-
-const s3Client = new S3Client({ region: "eu-central-1" });
+import mysql, { RowDataPacket } from "mysql2";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import multer from "multer";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -17,60 +15,84 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST, // AWS RDS endpoint
-  user: process.env.DB_USER, // MySQL database username
-  password: process.env.DB_PASSWORD, // MySQL database password
-  database: process.env.DB_NAME, // MySQL database name
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 connection.connect((err) => {
   if (err) {
-    console.error("Error connecting to MySQL database:");
-    console.error(err); // Log the full error object for debugging
+    console.error("Error connecting to MySQL database:", err);
     return;
   }
   console.log("Connected to MySQL database as id " + connection.threadId);
 });
 
-// Routes
-app.get("/api/code", (req: Request, res: Response) => {
-  const code = "Hi from the back!";
-  res.json({ code });
-});
+const s3Client = new S3Client({ region: "eu-central-1" });
 
-app.get("/api/upload", async (req: Request, res: Response) => {
-  const bucketName = "colman-moshe-s3";
-  const key = "123.txt"; // Object key in S3
-  const filePath = "./123.txt"; // Replace with your local file path
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+app.post("/api/recipes", upload.single("image"), async (req: Request, res: Response) => {
+  const { name, description } = req.body;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const s3Params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: file.originalname,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+  };
 
   try {
-    const fileBody = fs.readFileSync(filePath);
+    const data = await s3Client.send(new PutObjectCommand(s3Params));
+    const imageName = file.originalname;
 
-    const params = {
-      Bucket: bucketName,
-      Key: key,
-      Body: fileBody,
-    };
+    const query = "INSERT INTO Recipes (Name, Description, ImageName) VALUES (?, ?, ?)";
+    connection.query(query, [name, description, imageName], (err, results) => {
+      if (err) {
+        console.error("Error inserting into database:", err);
+        return res.status(500).json({ message: "Error inserting into database" });
+      }
 
-    const command = new PutObjectCommand(params);
-    await s3Client.send(command);
-    const msg = `File uploaded successfully to S3 bucket: ${bucketName}`;
-    res.json({ msg });
-  } catch (error) {
-    const msg1 = `Error uploading file to S3: ${error}`;
-    res.json({ msg1 });
+      res.status(201).json({ message: "Recipe created successfully", recipeId: (results as any).insertId });
+    });
+  } catch (err) {
+    console.error("Error uploading to S3:", err);
+    return res.status(500).json({ message: "Error uploading to S3" });
   }
 });
 
-app.get("/api/rds", (req: Request, res: Response) => {
-  connection.query("SELECT * FROM Words WHERE ID = 1", (err, result, fields) => {
+app.get("/api/recipes", (req: Request, res: Response) => {
+  const query = "SELECT * FROM Recipes";
+  connection.query(query, async (err, results) => {
     if (err) {
-      console.error("Error fetching data from Words table:");
-      console.error(err);
-      res.status(500).json({ error: "Database error" });
-      return;
+      console.error("Error fetching recipes from database:", err);
+      return res.status(500).json({ message: "Error fetching recipes from database" });
     }
-    res.json({ result });
+
+    const recipes = await Promise.all(
+      (results as RowDataPacket[]).map(async (recipe) => {
+        const command = new GetObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME!,
+          Key: recipe.ImageName,
+        });
+
+        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+        return {
+          ...recipe,
+          imageUrl: presignedUrl,
+        };
+      })
+    );
+
+    res.json(recipes);
   });
 });
 

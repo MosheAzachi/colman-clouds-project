@@ -1,13 +1,41 @@
-.homeBox {
-  width: 50%;
+.home {
+  padding: 20px;
+  min-height: 100vh;
+
   h1 {
     text-align: center;
+    margin-bottom: 20px;
+    color: #333;
   }
-}
 
-.buttonBox {
-  display: flex;
-  justify-content: center; /* Center button horizontally */
-  align-items: center; /* Center button vertically */
-  margin-top: 20px; /* Example margin for spacing */
+  .recipeList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .recipe {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+    h2 {
+      margin-top: 0;
+      color: #555;
+    }
+
+    p {
+      color: #777;
+      font-size: 0.9em;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+  }
 }

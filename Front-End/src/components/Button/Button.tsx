@@ -1,15 +1,15 @@
-import React from "react";
-import styles from "./Button.module.scss";
+import React from 'react';
 
 interface ButtonProps {
+  variant: "contained" | "outlined";
+  type?: "button" | "submit" | "reset";
+  onClick?: () => void;
   children: React.ReactNode;
-  variant: "text" | "contained" | "outlined";
-  onClick: () => void; // Optional onClick handler
 }
 
-const Button: React.FC<ButtonProps> = ({ children, variant = "contained", onClick }) => {
+const Button: React.FC<ButtonProps> = ({ variant, type = "button", onClick, children }) => {
   return (
-    <button className={`${styles.button} ${styles[variant]}`} onClick={onClick}>
+    <button type={type} className={`button ${variant}`} onClick={onClick}>
       {children}
     </button>
   );
